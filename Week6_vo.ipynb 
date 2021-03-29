@@ -1,0 +1,153 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "accelerator": "GPU",
+    "colab": {
+      "name": "Week6_vo.ipynb",
+      "provenance": [],
+      "toc_visible": true,
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "file_extension": ".py",
+      "mimetype": "text/x-python",
+      "name": "python",
+      "nbconvert_exporter": "python",
+      "pygments_lexer": "ipython3",
+      "version": "3.7.1"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/iremarpag/Comp423/blob/main/Week6_vo.ipynb%20\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "oltMOCo4gkD0"
+      },
+      "source": [
+        "# Week 6: Visual Odometry (VO)\n",
+        "\n",
+        "In this week's assignment, you do not need. a GPU. You will use the pykitti module and KITTI odometry dataset.\n",
+        "\n",
+        "You can download the odometry data from [here](https://drive.google.com/file/d/1PJOUnM3nEwDpqiRvfqUnkNPJZpM4PKYV/view?usp=sharing)."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "ffiRr-EEgkD9"
+      },
+      "source": [
+        "## Monocular VO with OpenCV on KITTI\n",
+        "\n",
+        "For each consecutive frame pair in the sequence, you will compute the relative pose between the frames and visualize it. You will use:\n",
+        "\n",
+        "* pykitti code similar to what you wrote in Week 3 to load the seqeunce with ground-truth info. (Check out the [demo code for odometry dataset](https://github.com/utiasSTARS/pykitti/blob/master/demos/demo_odometry.py))\n",
+        "* OpenCV functions to compute and visualize the features and the essential matrix.\n",
+        "\n",
+        "Please follow these steps to complete the assignment:\n",
+        "\n",
+        "1. You can use the ORB Feature to do the feature matching:\n",
+        "    `orb = cv2.ORB_create()` to create the ORB object\n",
+        "    and then `orb.detectAndCompute()` to find the keypoints and descriptors on both frames\n",
+        "\n",
+        "2. You can use brute-force matcher to match ORB descriptors:\n",
+        "    `bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)`\n",
+        "\n",
+        "3. After matching the descriptors, sort the matched keypoints.\n",
+        "\n",
+        "4. Draw matches on the two images using the `cv2.drawMatches()` function.\n",
+        "\n",
+        "5. Compute the essential matrix using the `cv2.findEssentialMat()` function. Note that you need the matching points and the instrinsics for this function. \n",
+        "\n",
+        "6. Extract the rotation and translation from the essential matrix using the `cv2.recoverPose()` function.\n",
+        "\n",
+        "7. Multiply the estimated rotation and translation with the previous rotation and translation. Initialize rotation to identity and translation to zeros on the first frame.\n",
+        "\n",
+        "8. Display the current image with the keypoints on it using the `cv2.drawKeypoints()` function.\n",
+        "\n",
+        "9. Update the previous rotation and translation as the current rotation and translation.\n",
+        "\n",
+        "10. Draw the estimated trajectory as blue and ground-truth trajectory as green. You can use the `cv2.circle()` function.\n",
+        "\n",
+        "\n",
+        "You can create a video of your visualization of images and poses for the provided sequence.\n",
+        "\n",
+        "**Bonus**: Compute the absolute trajectory error between the estimated trajectory and the ground-truth trajectory. \n",
+        "\n",
+        "Some examples repositories that might be useful:\n",
+        "* https://bitbucket.org/castacks/visual_odometry_tutorial/src/master/visual-odometry/\n",
+        "* https://github.com/uoip/monoVO-python\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 425
+        },
+        "id": "M1NWzW7tWoCF",
+        "outputId": "88af6632-d2fd-4c74-d831-b696e43a990b"
+      },
+      "source": [
+        "from google.colab import auth\n",
+        "auth.authenticate_user()\n",
+        "\n",
+        "import gspread\n",
+        "from oauth2client.client import GoogleCredentials\n",
+        "\n",
+        "gc = gspread.authorize(GoogleCredentials.get_application_default())\n",
+        "\n",
+        "worksheet = gc.open('Your spreadsheet name').sheet1\n",
+        "\n",
+        "# get_all_values gives a list of rows.\n",
+        "rows = worksheet.get_all_values()\n",
+        "print(rows)\n",
+        "\n",
+        "# Convert to a DataFrame and render.\n",
+        "import pandas as pd\n",
+        "pd.DataFrame.from_records(rows)"
+      ],
+      "execution_count": 1,
+      "outputs": [
+        {
+          "output_type": "error",
+          "ename": "SpreadsheetNotFound",
+          "evalue": "ignored",
+          "traceback": [
+            "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+            "\u001b[0;31mStopIteration\u001b[0m                             Traceback (most recent call last)",
+            "\u001b[0;32m/usr/local/lib/python3.7/dist-packages/gspread/client.py\u001b[0m in \u001b[0;36mopen\u001b[0;34m(self, title)\u001b[0m\n\u001b[1;32m    121\u001b[0m                 \u001b[0;32mlambda\u001b[0m \u001b[0mx\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0mx\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m'name'\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;34m==\u001b[0m \u001b[0mtitle\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 122\u001b[0;31m                 \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mlist_spreadsheet_files\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    123\u001b[0m             )\n",
+            "\u001b[0;32m/usr/local/lib/python3.7/dist-packages/gspread/utils.py\u001b[0m in \u001b[0;36mfinditem\u001b[0;34m(func, seq)\u001b[0m\n\u001b[1;32m     28\u001b[0m     \"\"\"\n\u001b[0;32m---> 29\u001b[0;31m     \u001b[0;32mreturn\u001b[0m \u001b[0mnext\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mitem\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0mitem\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mseq\u001b[0m \u001b[0;32mif\u001b[0m \u001b[0mfunc\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mitem\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     30\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;31mStopIteration\u001b[0m: ",
+            "\nDuring handling of the above exception, another exception occurred:\n",
+            "\u001b[0;31mSpreadsheetNotFound\u001b[0m                       Traceback (most recent call last)",
+            "\u001b[0;32m<ipython-input-1-7955c78b787a>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      7\u001b[0m \u001b[0mgc\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mgspread\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mauthorize\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mGoogleCredentials\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mget_application_default\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      8\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 9\u001b[0;31m \u001b[0mworksheet\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mgc\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mopen\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'Your spreadsheet name'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0msheet1\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     10\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     11\u001b[0m \u001b[0;31m# get_all_values gives a list of rows.\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;32m/usr/local/lib/python3.7/dist-packages/gspread/client.py\u001b[0m in \u001b[0;36mopen\u001b[0;34m(self, title)\u001b[0m\n\u001b[1;32m    128\u001b[0m             \u001b[0;32mreturn\u001b[0m \u001b[0mSpreadsheet\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mproperties\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    129\u001b[0m         \u001b[0;32mexcept\u001b[0m \u001b[0mStopIteration\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 130\u001b[0;31m             \u001b[0;32mraise\u001b[0m \u001b[0mSpreadsheetNotFound\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    131\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    132\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0mopen_by_key\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mkey\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;31mSpreadsheetNotFound\u001b[0m: "
+          ]
+        }
+      ]
+    }
+  ]
+}
