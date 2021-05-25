@@ -1,4 +1,8 @@
-# flownet3d.pytorch
+# Computer Vision for Autonomous Driving 
+Koç University Spring 2021
+
+flownet3d.pytorch
+
 PyTorch implementation of FlowNet3D (https://arxiv.org/pdf/1806.01411.pdf).
 
 Original Tensorflow implementation at https://github.com/xingyul/flownet3d.
